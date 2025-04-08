@@ -1,0 +1,292 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 2%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 5%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 3%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 28 57% 53%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 8%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 8%;
+  --muted-foreground: 0 0% 65%;
+  --accent: 28 57% 53%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 12%;
+  --input: 0 0% 12%;
+  --ring: 28 57% 53%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: #030303;
+  color: #d1d5db; /* zinc-300 */
+  position: relative;
+}
+
+/* Efecto de estrellas en el fondo */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0)),
+    radial-gradient(1px 1px at 40px 70px, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0)),
+    radial-gradient(1px 1px at 50px 160px, rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0)),
+    radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0)),
+    radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0)),
+    radial-gradient(1px 1px at 160px 120px, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0));
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  z-index: -1;
+  opacity: 0.15;
+}
+
+.gradient-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, #d08c60, #e3a857);
+}
+
+.card-hover {
+  transition: all 0.3s;
+}
+
+.card-hover:hover {
+  box-shadow: 0 10px 15px -3px rgba(208, 140, 96, 0.2);
+  transform: translateY(-4px);
+}
+
+.button-glow:hover {
+  box-shadow: 0 4px 6px -1px rgba(208, 140, 96, 0.5);
+  transition: all 0.3s;
+}
+
+/* Animación para el fondo dinámico */
+.animated-gradient {
+  background: linear-gradient(
+    -45deg,
+    rgba(3, 3, 3, 0.9),
+    rgba(10, 10, 20, 0.9),
+    rgba(5, 5, 15, 0.9),
+    rgba(3, 3, 10, 0.9)
+  );
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Animación para partículas */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(208, 140, 96, 0.15), rgba(227, 168, 87, 0.1));
+  border: 1px solid rgba(208, 140, 96, 0.2);
+  box-shadow: 0 0 10px rgba(208, 140, 96, 0.1);
+  animation: float 8s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  50% {
+    transform: translateY(-10px) translateX(20px);
+  }
+  75% {
+    transform: translateY(-30px) translateX(-10px);
+  }
+}
+
+/* Animación para texto que aparece */
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s forwards;
+}
+
+.delay-1 {
+  animation-delay: 0.2s;
+}
+
+.delay-2 {
+  animation-delay: 0.4s;
+}
+
+.delay-3 {
+  animation-delay: 0.6s;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Efecto de brillo cobre */
+.copper-glow {
+  box-shadow: 0 0 20px rgba(208, 140, 96, 0.4);
+}
+
+.copper-border {
+  border: 1px solid rgba(208, 140, 96, 0.3);
+}
+
+/* Efecto de brillo para elementos interactivos */
+.copper-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.copper-shine::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(45deg);
+  transition: all 0.3s;
+  opacity: 0;
+}
+
+.copper-shine:hover::after {
+  animation: shine 1.5s ease-out;
+  opacity: 1;
+}
+
+@keyframes shine {
+  0% {
+    transform: scale(0) rotate(45deg);
+    opacity: 0;
+  }
+  80% {
+    transform: scale(2) rotate(45deg);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+/* Estilos para botones */
+.btn-outline {
+  color: #d08c60 !important;
+  border-color: #d08c60 !important;
+  background-color: transparent !important;
+}
+
+.btn-outline:hover {
+  color: #e3a857 !important;
+  border-color: #e3a857 !important;
+  background-color: rgba(208, 140, 96, 0.1) !important;
+}
+
+.btn-primary {
+  color: #ffffff !important;
+  background-color: #d08c60 !important;
+}
+
+.btn-primary:hover {
+  background-color: #c77c3c !important;
+}
+
+/* Fondos especiales */
+.space-bg {
+  background-color: #030303;
+  position: relative;
+}
+
+.nebula-bg {
+  background-color: #050510;
+  background-image: radial-gradient(circle at 20% 30%, rgba(30, 20, 60, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(50, 30, 80, 0.1) 0%, transparent 50%);
+}
+
+.tech-card {
+  background-color: #050508;
+  background-image: linear-gradient(135deg, rgba(20, 20, 40, 0.4) 0%, rgba(5, 5, 10, 0.4) 100%),
+    repeating-linear-gradient(
+      45deg,
+      rgba(30, 30, 60, 0.05) 0px,
+      rgba(30, 30, 60, 0.05) 1px,
+      transparent 1px,
+      transparent 10px
+    );
+  border: 1px solid rgba(40, 40, 80, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.copper-accent {
+  position: relative;
+}
+
+.copper-accent::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(208, 140, 96, 0.05) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Efecto de líneas de circuito */
+.circuit-pattern {
+  position: relative;
+  overflow: hidden;
+}
+
+.circuit-pattern::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(90deg, rgba(208, 140, 96, 0.03) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(208, 140, 96, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  opacity: 0.5;
+}
