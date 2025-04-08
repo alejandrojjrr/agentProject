@@ -13,6 +13,7 @@ export default function Navbar() {
       <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center space-x-2">
           <span className="text-2xl font-bold text-[#d08c60] transition-all hover:scale-105">Nexus</span>
+          <span className="ml-2 text-2xl">✨</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -38,7 +39,7 @@ export default function Navbar() {
         <div className="hidden space-x-4 md:flex">
           <Link href="/login">
             <Button
-              variant="copper-outline"
+              variant="copper"
               size="lg"
             >
               Log in
@@ -94,7 +95,7 @@ export default function Navbar() {
           <div className="flex flex-col space-y-3 pt-4">
             <Link href="/login" className="w-full">
               <Button
-                variant="copper-outline"
+                variant="copper"
                 className="w-full"
                 size="lg"
                 onClick={() => setIsMenuOpen(false)}

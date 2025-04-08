@@ -5,13 +5,14 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
+import BackgroundStars from "@/components/background-stars"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Nexus - AI Agent Management Platform",
   description: "Create, customize and manage AI agents with our intuitive platform",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -24,8 +25,14 @@ export default function RootLayout({
       <body className={`${inter.className} space-bg`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <div className="flex min-h-screen flex-col">
+            {/* Background Animation */}
+            <BackgroundStars />
+            
+            {/* Subtle gradient overlay */}
+            <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-b from-transparent to-black/40"></div>
+            
             <Navbar />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 relative z-10">{children}</main>
             <Footer />
           </div>
         </ThemeProvider>
@@ -33,6 +40,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-
-import './globals.css'
