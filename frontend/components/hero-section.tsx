@@ -15,13 +15,13 @@ export default function HeroSection() {
           Build, customize, and manage powerful AI agents without writing a single line of code. Our platform makes AI development accessible to everyone.
         </p>
         <div className="flex flex-col items-center justify-center space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0 fade-in-up delay-2">
-          <Link href="/register">
+          <Link href="/dashboard">
             <Button
               variant="copper"
               size="lg"
               className="w-full sm:w-auto"
             >
-              Get Started Free
+              Go to Dashboard
               <ArrowRight size={16} className="ml-2" />
             </Button>
           </Link>

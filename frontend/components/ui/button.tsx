@@ -9,7 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-[#d08c60] text-white hover:bg-[#c77c3c] shadow-lg shadow-[#d08c60]/20 hover:shadow-[#d08c60]/30",
+        default: "bg-[rgb(171,89,50)] text-white hover:bg-[rgb(255,200,180)] hover:text-[rgb(40,20,10)] shadow-lg shadow-[rgb(171,89,50)]/20 hover:shadow-[rgb(171,89,50)]/30",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg shadow-destructive/20",
         outline:
@@ -18,8 +18,8 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-lg shadow-secondary/20",
         ghost: "hover:bg-accent/10 hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        copper: "bg-[#d08c60] text-white hover:bg-[#c77c3c] shadow-lg shadow-[#d08c60]/20 hover:shadow-[#d08c60]/30",
-        "copper-outline": "border-2 border-[#d08c60] text-[#d08c60] hover:text-[#e3a857] hover:border-[#e3a857] hover:bg-[#d08c60]/10 shadow-lg hover:shadow-[#d08c60]/20 backdrop-blur-sm",
+        copper: "bg-[rgb(171,89,50)] text-white hover:bg-[rgb(255,200,180)] hover:text-[rgb(40,20,10)] shadow-lg shadow-[rgb(171,89,50)]/20 hover:shadow-[rgb(171,89,50)]/30",
+        "copper-outline": "border-2 border-[rgb(171,89,50)] text-[rgb(171,89,50)] hover:bg-[rgb(255,200,180)] hover:text-[rgb(40,20,10)] hover:border-[rgb(255,200,180)] shadow-lg hover:shadow-[rgb(171,89,50)]/20 backdrop-blur-sm",
       },
       size: {
         default: "h-10 px-6 py-2",

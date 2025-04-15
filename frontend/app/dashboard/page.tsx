@@ -1,11 +1,54 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Bot, Plus, Settings, Zap } from "lucide-react"
 import AgentEditor from "@/components/agent-editor"
+import Link from "next/link"
 
 export default function DashboardPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const token = localStorage.getItem('token')
+    setIsAuthenticated(!!token)
+    setIsLoading(false)
+  }, [])
+
+  if (isLoading) {
+    return <div className="container mx-auto px-4 py-8">Loading...</div>
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="mx-auto max-w-md">
+          <CardHeader>
+            <CardTitle>Authentication Required</CardTitle>
+            <CardDescription>Please log in or create an account to access the dashboard</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Link href="/login">
+              <Button variant="copper" className="w-full">
+                Log in
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button variant="copper-outline" className="w-full">
+                Create Account
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
