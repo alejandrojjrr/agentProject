@@ -150,10 +150,15 @@ exports.chat = async (req, res) => {
       endpoint: agent.apiConfig.additionalConfig?.get('endpoint')
     });
 
+    // Preparar los mensajes incluyendo el system prompt si existe
+    const messages = [];
+    if (agent.systemPrompt) {
+      messages.push({ role: 'system', content: agent.systemPrompt });
+    }
+    messages.push({ role: 'user', content: message });
+
     // Enviar mensaje y obtener respuesta
-    const response = await aiService.chat([
-      { role: 'user', content: message }
-    ]);
+    const response = await aiService.chat(messages);
 
     res.json(response);
   } catch (error) {

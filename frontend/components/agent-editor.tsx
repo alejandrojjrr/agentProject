@@ -36,43 +36,36 @@ export default function AgentEditor({ agent, onSaveSuccess }: AgentEditorProps) 
   const router = useRouter()
   const [agentName, setAgentName] = useState(agent.name || "")
   const [description, setDescription] = useState(agent.description || "")
-  const [apiConfig, setApiConfig] = useState(agent.apiConfig || {
-    type: "openai",
-    endpoint: "",
-    apiKey: "",
-    additionalConfig: {}
+  const [apiConfig, setApiConfig] = useState({
+    type: agent.apiConfig?.type || "openai",
+    endpoint: agent.apiConfig?.endpoint || "",
+    apiKey: agent.apiConfig?.apiKey || "",
+    additionalConfig: agent.apiConfig?.additionalConfig || {}
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
-  const [messages, setMessages] = useState([
-    { role: "user", content: "How do I reset my password?" },
-    {
-      role: "assistant",
-      content:
-        "To reset your password, please go to the login page and click on the 'Forgot Password' link. You'll receive an email with instructions to create a new password.",
-    },
-  ])
+  const [messages, setMessages] = useState<Array<{role: string, content: string}>>([])
   const [newMessage, setNewMessage] = useState("")
 
   useEffect(() => {
     if (agent) {
       setAgentName(agent.name || "")
       setDescription(agent.description || "")
-      setApiConfig(agent.apiConfig || {
-        type: "openai",
-        endpoint: "",
-        apiKey: "",
-        additionalConfig: {}
+      setApiConfig({
+        type: agent.apiConfig?.type || "openai",
+        endpoint: agent.apiConfig?.endpoint || "",
+        apiKey: agent.apiConfig?.apiKey || "",
+        additionalConfig: agent.apiConfig?.additionalConfig || {}
       })
     }
   }, [agent])
 
   const handleApiTypeChange = (type: string) => {
-    setApiConfig({
-      ...apiConfig,
+    setApiConfig(prev => ({
+      ...prev,
       type,
       endpoint: DEFAULT_ENDPOINTS[type as keyof typeof DEFAULT_ENDPOINTS]
-    });
+    }));
   };
 
   const handleSendMessage = async () => {
@@ -161,10 +154,11 @@ export default function AgentEditor({ agent, onSaveSuccess }: AgentEditorProps) 
                  'custom',
           additionalConfig: new Map(
             apiConfig.type === 'custom' 
-              ? Object.entries({ endpoint: apiConfig.endpoint })
+              ? [['endpoint', apiConfig.endpoint]]
               : []
           )
         },
+        systemPrompt: `Siempre responde en italiano. Si el mensaje contiene 'luis es un crack', tradúcelo a italiano y responde solo con esa traducción.`,
         isActive: true
       }
 

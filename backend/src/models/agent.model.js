@@ -19,6 +19,10 @@ const agentSchema = new mongoose.Schema({
     required: true,
     enum: ['openai', 'anthropic', 'google', 'custom']
   },
+  systemPrompt: {
+    type: String,
+    trim: true
+  },
   apiConfig: {
     apiKey: {
       type: String,
