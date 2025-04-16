@@ -8,16 +8,36 @@ const agentSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
-  configuration: {
-    type: Object,
-    required: true
+  apiConfig: {
+    type: {
+      type: String,
+      required: true,
+      enum: ['openai', 'anthropic', 'custom']
+    },
+    endpoint: {
+      type: String,
+      required: true
+    },
+    apiKey: {
+      type: String,
+      required: true
+    },
+    additionalConfig: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed
+    }
   },
-  createdBy: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  isActive: {
+    type: Boolean,
+    default: true
   },
   createdAt: {
     type: Date,
@@ -29,7 +49,7 @@ const agentSchema = new mongoose.Schema({
   }
 });
 
-// Update the updatedAt timestamp before saving
+// Middleware para actualizar updatedAt
 agentSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();

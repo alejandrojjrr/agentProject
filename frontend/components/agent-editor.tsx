@@ -1,14 +1,49 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Bot, Brain, Database, FileText, MessageSquare, Save, Settings, Upload, Plus } from "lucide-react"
+import { useRouter } from "next/navigation"
 
-export default function AgentEditor() {
-  const [agentName, setAgentName] = useState("Customer Support Agent")
+interface Agent {
+  _id?: string
+  name: string
+  description: string
+  apiConfig?: {
+    type: string
+    endpoint: string
+    apiKey: string
+    additionalConfig?: Record<string, any>
+  }
+  isActive?: boolean
+}
+
+interface AgentEditorProps {
+  agent: Agent
+  onSaveSuccess?: () => void
+}
+
+const DEFAULT_ENDPOINTS = {
+  openai: 'https://api.openai.com/v1',
+  anthropic: 'https://api.anthropic.com/v1',
+  custom: ''
+};
+
+export default function AgentEditor({ agent, onSaveSuccess }: AgentEditorProps) {
+  const router = useRouter()
+  const [agentName, setAgentName] = useState(agent.name || "")
+  const [description, setDescription] = useState(agent.description || "")
+  const [apiConfig, setApiConfig] = useState(agent.apiConfig || {
+    type: "openai",
+    endpoint: "",
+    apiKey: "",
+    additionalConfig: {}
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
   const [messages, setMessages] = useState([
     { role: "user", content: "How do I reset my password?" },
     {
@@ -19,22 +54,125 @@ export default function AgentEditor() {
   ])
   const [newMessage, setNewMessage] = useState("")
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      setMessages([...messages, { role: "user", content: newMessage }])
-      setNewMessage("")
+  useEffect(() => {
+    if (agent) {
+      setAgentName(agent.name || "")
+      setDescription(agent.description || "")
+      setApiConfig(agent.apiConfig || {
+        type: "openai",
+        endpoint: "",
+        apiKey: "",
+        additionalConfig: {}
+      })
+    }
+  }, [agent])
 
-      // Simulate AI response
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content:
-              "I'm a simulated response from your AI agent. In a real implementation, this would be connected to your backend AI service.",
+  const handleApiTypeChange = (type: string) => {
+    setApiConfig({
+      ...apiConfig,
+      type,
+      endpoint: DEFAULT_ENDPOINTS[type as keyof typeof DEFAULT_ENDPOINTS]
+    });
+  };
+
+  const handleSendMessage = async () => {
+    if (newMessage.trim()) {
+      setMessages([...messages, { role: "user", content: newMessage }]);
+      setNewMessage("");
+
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          router.push('/login');
+          return;
+        }
+
+        const response = await fetch(`http://localhost:5000/api/agents/${agent._id}/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
-        ])
-      }, 1000)
+          body: JSON.stringify({
+            message: newMessage
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get AI response');
+        }
+
+        const data = await response.json();
+        setMessages(prev => [...prev, data]);
+      } catch (error) {
+        console.error('Error sending message:', error);
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: 'Sorry, I encountered an error while processing your message. Please try again later.'
+        }]);
+      }
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true)
+      setError("")
+
+      // Validación básica
+      if (!agentName.trim()) {
+        throw new Error("Agent name is required")
+      }
+      if (!description.trim()) {
+        throw new Error("Description is required")
+      }
+      if (!apiConfig.type || !apiConfig.endpoint || !apiConfig.apiKey) {
+        throw new Error("All API configuration fields are required")
+      }
+
+      const token = localStorage.getItem('token')
+      if (!token) {
+        router.push('/login')
+        return
+      }
+
+      const agentData = {
+        name: agentName,
+        description,
+        apiConfig
+      }
+
+      const url = agent._id 
+        ? `http://localhost:5000/api/agents/${agent._id}` 
+        : 'http://localhost:5000/api/agents'
+      
+      const method = agent._id ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(agentData),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || 'Failed to save agent')
+      }
+
+      // Si todo fue exitoso
+      if (onSaveSuccess) {
+        onSaveSuccess()
+      } else {
+        window.location.reload()
+      }
+    } catch (error) {
+      console.error('Error saving agent:', error)
+      setError(error instanceof Error ? error.message : 'An error occurred while saving')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -44,6 +182,12 @@ export default function AgentEditor() {
       <div className="lg:col-span-1">
         <Card className="border-zinc-800 tech-card circuit-pattern">
           <CardContent className="p-6">
+            {error && (
+              <div className="mb-4 rounded-md bg-red-500/10 p-3 text-sm text-red-500">
+                {error}
+              </div>
+            )}
+            
             <div className="mb-6">
               <label htmlFor="agentName" className="mb-2 block text-sm font-medium">
                 Agent Name
@@ -56,7 +200,20 @@ export default function AgentEditor() {
               />
             </div>
 
-            <Tabs defaultValue="knowledge" className="w-full">
+            <div className="mb-6">
+              <label htmlFor="description" className="mb-2 block text-sm font-medium">
+                Description
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full rounded-md border border-zinc-700 bg-zinc-800/50 p-2 text-zinc-100"
+                rows={3}
+              />
+            </div>
+
+            <Tabs defaultValue="settings" className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-zinc-800/50">
                 <TabsTrigger
                   value="knowledge"
@@ -79,31 +236,21 @@ export default function AgentEditor() {
               </TabsList>
 
               <TabsContent value="knowledge" className="mt-4 space-y-4">
-                <div className="rounded-md border border-dashed border-zinc-700 bg-zinc-800/30 p-4 text-center">
-                  <FileText className="mx-auto mb-2 h-8 w-8 text-zinc-500" />
-                  <p className="mb-2 text-sm text-zinc-400">Drag and drop files or click to upload</p>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Knowledge Base</label>
+                  <div className="rounded-md border border-zinc-700 bg-zinc-800/30 p-3">
+                    <div className="flex items-center">
+                      <FileText className="mr-2 h-4 w-4 text-[#e3a857]" />
+                      <span className="text-sm">Product Documentation</span>
+                    </div>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-zinc-700 text-xs hover:border-[#d08c60] hover:text-[#d08c60]"
+                    className="mt-2 w-full border-zinc-700 text-xs hover:border-[#d08c60] hover:text-[#d08c60]"
                   >
-                    <Upload className="mr-1 h-3 w-3" /> Upload Files
+                    <Upload className="mr-1 h-3 w-3" /> Upload Knowledge
                   </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between rounded-md border border-zinc-700 bg-zinc-800/30 p-2">
-                    <span className="text-sm">product-manual.pdf</span>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-zinc-400 hover:text-[#d08c60]">
-                      ×
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between rounded-md border border-zinc-700 bg-zinc-800/30 p-2">
-                    <span className="text-sm">faq.docx</span>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-zinc-400 hover:text-[#d08c60]">
-                      ×
-                    </Button>
-                  </div>
                 </div>
               </TabsContent>
 
@@ -134,26 +281,62 @@ export default function AgentEditor() {
 
               <TabsContent value="settings" className="mt-4 space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Model</label>
-                  <select className="w-full rounded-md border border-zinc-700 bg-zinc-800/30 p-2 text-sm text-zinc-100">
-                    <option>GPT-4</option>
-                    <option>Claude 3</option>
-                    <option>Llama 3</option>
+                  <label className="text-sm font-medium">API Type</label>
+                  <select 
+                    value={apiConfig.type}
+                    onChange={(e) => handleApiTypeChange(e.target.value)}
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-800/30 p-2 text-sm text-zinc-100"
+                  >
+                    <option value="openai">OpenAI (GPT-4, GPT-3.5)</option>
+                    <option value="anthropic">Anthropic (Claude)</option>
+                    <option value="custom">Custom API</option>
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Temperature</label>
-                  <input type="range" min="0" max="1" step="0.1" defaultValue="0.7" className="w-full" />
-                  <div className="flex justify-between text-xs text-zinc-400">
-                    <span>Precise</span>
-                    <span>Creative</span>
-                  </div>
+                  <label className="text-sm font-medium">
+                    API Endpoint
+                    {apiConfig.type !== 'custom' && (
+                      <span className="ml-2 text-xs text-zinc-400">(Pre-configured for {apiConfig.type})</span>
+                    )}
+                  </label>
+                  <Input
+                    value={apiConfig.endpoint}
+                    onChange={(e) => setApiConfig({...apiConfig, endpoint: e.target.value})}
+                    disabled={apiConfig.type !== 'custom'}
+                    placeholder={apiConfig.type === 'custom' ? 'Enter your API endpoint' : undefined}
+                    className="border-zinc-700 bg-zinc-800/30 text-zinc-100"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    API Key
+                    <span className="ml-2 text-xs text-zinc-400">
+                      (Get from {apiConfig.type === 'openai' ? 'OpenAI' : apiConfig.type === 'anthropic' ? 'Anthropic' : 'your provider'})
+                    </span>
+                  </label>
+                  <Input
+                    type="password"
+                    value={apiConfig.apiKey}
+                    onChange={(e) => setApiConfig({...apiConfig, apiKey: e.target.value})}
+                    placeholder={`Enter your ${apiConfig.type} API key`}
+                    className="border-zinc-700 bg-zinc-800/30 text-zinc-100"
+                  />
                 </div>
               </TabsContent>
             </Tabs>
 
-            <Button className="mt-6 w-full bg-[#d08c60] hover:bg-[#c77c3c] button-glow copper-shine btn-primary">
-              <Save className="mr-2 h-4 w-4" /> Save Agent
+            <Button 
+              onClick={handleSave}
+              disabled={saving}
+              className="mt-6 w-full bg-[#d08c60] hover:bg-[#c77c3c] button-glow copper-shine btn-primary"
+            >
+              {saving ? (
+                "Saving..."
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" /> Save Agent
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -192,7 +375,7 @@ export default function AgentEditor() {
               ))}
             </div>
 
-            <div className="flex space-x-2">
+            <div className="flex gap-2">
               <Input
                 placeholder="Type a message to test your agent..."
                 value={newMessage}
