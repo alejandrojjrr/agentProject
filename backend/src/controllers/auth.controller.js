@@ -5,7 +5,15 @@ const { validationResult } = require('express-validator');
 
 const generateToken = (user) => {
   return jwt.sign(
-    { userId: user._id },
+    { 
+      userId: user._id,
+      permissions: [
+        'agents:read',
+        'agents:write',
+        'chat:read',
+        'chat:write'
+      ]
+    },
     process.env.JWT_SECRET || 'D$f7*Kp9!2sQrT35zX@vB3nM6lO8iY1aE4gH0jU',
     { expiresIn: '24h' }
   );

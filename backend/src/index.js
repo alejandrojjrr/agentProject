@@ -5,6 +5,10 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const config = require('./config');
 
 // Para depuración - muestra si la variable de entorno se cargó
 console.log('Entorno:', process.env.NODE_ENV);
@@ -12,59 +16,31 @@ console.log('MONGODB_URI definido:', !!process.env.MONGODB_URI);
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Security middleware
+app.use(helmet());
+app.use(cookieParser());
+
+// CORS configuration
+app.use(cors({
+  origin: config.security.cors.origin,
+  credentials: true
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: config.security.rateLimit.windowMs,
+  max: config.security.rateLimit.max,
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use(limiter);
+
+// Parse JSON bodies
 app.use(express.json());
 
-// Database connection
-const connectDB = async () => {
-  if (!process.env.MONGODB_URI) {
-    // Si no se carga desde .env, definimos una URL de conexión por defecto
-    // con la contraseña correcta
-    process.env.MONGODB_URI = 'mongodb+srv://amilla:Serpiente@cluster0.64lbxhq.mongodb.net/?retryWrites=true&w=majority';
-    console.log('Usando URI de MongoDB por defecto (no se encontró en .env)');
-  }
-
-  try {
-    // Oculta la contraseña en los logs
-    const uriForLog = process.env.MONGODB_URI.replace(/:[^:]*@/, ':****@');
-    console.log('Intentando conectar a MongoDB:', uriForLog);
-    
-    await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 30000,
-      heartbeatFrequencyMS: 2000,
-    });
-    
-    console.log('Conectado a MongoDB exitosamente');
-  } catch (error) {
-    console.error('Error de conexión a MongoDB:', error.message);
-    
-    if (error.message.includes('bad auth')) {
-      console.error('Error de autenticación: Verifica que el usuario y contraseña sean correctos');
-    } else if (error.name === 'MongoServerSelectionError') {
-      console.error('Error de selección de servidor:', error.reason);
-    }
-    
-    console.error('Asegúrate de que el archivo .env existe y contiene MONGODB_URI correcta');
-    console.error('O verifica que la URI hardcodeada sea correcta');
-  }
-};
-
-// Ejecutar la conexión
-connectDB();
-
-// Handle MongoDB connection events
-mongoose.connection.on('connected', () => {
-  console.log('Mongoose connected to MongoDB');
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error('Mongoose connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('Mongoose disconnected');
-});
+// Connect to MongoDB
+mongoose.connect(config.mongo.uri, config.mongo.options)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
@@ -76,7 +52,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = config.port;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });

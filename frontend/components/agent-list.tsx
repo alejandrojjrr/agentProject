@@ -27,20 +27,35 @@ export default function AgentList({ onSelectAgent }: { onSelectAgent: (agent: Ag
     try {
       const token = localStorage.getItem('token')
       if (!token) {
+        console.log('No token found, redirecting to login')
         router.push('/login')
         return
       }
 
       const response = await fetch('http://localhost:5000/api/agents', {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       })
-      if (!response.ok) throw new Error('Failed to fetch agents')
+
+      if (response.status === 401 || response.status === 403) {
+        console.log('Token expired or invalid, redirecting to login')
+        localStorage.removeItem('token')
+        router.push('/login')
+        return
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to fetch agents')
+      }
+
       const data = await response.json()
       setAgents(data)
     } catch (error) {
       console.error('Error fetching agents:', error)
+      setAgents([])
     } finally {
       setLoading(false)
     }

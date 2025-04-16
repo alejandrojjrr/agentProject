@@ -1,98 +1,98 @@
 const Agent = require('../models/agent.model');
 const AIService = require('../services/ai.service');
 
-// Listar todos los agentes del usuario
-exports.getUserAgents = async (req, res) => {
+/**
+ * Obtener todos los agentes del usuario
+ */
+exports.getAllAgents = async (req, res) => {
   try {
-    const agents = await Agent.find({ user: req.user._id, isActive: true })
-      .select('-apiConfig.apiKey')
-      .sort({ updatedAt: -1 });
-    res.json(agents);
+    const agents = await Agent.find({ user: req.user.id });
+    res.json(agents.map(agent => agent.sanitizeConfig()));
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error fetching agents' });
+    res.status(500).json({ message: 'Error al obtener los agentes' });
   }
 };
 
-// Obtener detalles de un agente específico
-exports.getAgent = async (req, res) => {
-  try {
-    const agent = await Agent.findOne({
-      _id: req.params.id,
-      user: req.user._id,
-      isActive: true
-    }).select('-apiConfig.apiKey');
-
-    if (!agent) {
-      return res.status(404).json({ message: 'Agent not found' });
-    }
-
-    res.json(agent);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error fetching agent' });
-  }
-};
-
-// Crear un nuevo agente
+/**
+ * Crear un nuevo agente
+ */
 exports.createAgent = async (req, res) => {
   try {
-    const { name, description, apiConfig } = req.body;
+    const agentData = {
+      ...req.body,
+      user: req.user.id
+    };
 
-    const agent = new Agent({
-      name,
-      description,
-      apiConfig,
-      user: req.user._id
-    });
+    const agent = new Agent(agentData);
+    const validationErrors = agent.validateConfig();
+    
+    if (validationErrors) {
+      return res.status(400).json({ errors: validationErrors });
+    }
 
     await agent.save();
-    res.status(201).json(agent);
+    res.status(201).json(agent.sanitizeConfig());
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error creating agent' });
+    res.status(400).json({ message: 'Error al crear el agente', error: error.message });
   }
 };
 
-// Actualizar un agente existente
+/**
+ * Obtener un agente por ID
+ */
+exports.getAgentById = async (req, res) => {
+  try {
+    const agent = await Agent.findOne({ _id: req.params.id, user: req.user.id });
+    
+    if (!agent) {
+      return res.status(404).json({ message: 'Agente no encontrado' });
+    }
+
+    res.json(agent.sanitizeConfig());
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener el agente' });
+  }
+};
+
+/**
+ * Actualizar un agente
+ */
 exports.updateAgent = async (req, res) => {
   try {
-    const { name, description, apiConfig } = req.body;
-
-    const agent = await Agent.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
-      { name, description, apiConfig },
-      { new: true, runValidators: true }
-    ).select('-apiConfig.apiKey');
-
+    const agent = await Agent.findOne({ _id: req.params.id, user: req.user.id });
+    
     if (!agent) {
-      return res.status(404).json({ message: 'Agent not found' });
+      return res.status(404).json({ message: 'Agente no encontrado' });
     }
 
-    res.json(agent);
+    Object.assign(agent, req.body);
+    const validationErrors = agent.validateConfig();
+    
+    if (validationErrors) {
+      return res.status(400).json({ errors: validationErrors });
+    }
+
+    await agent.save();
+    res.json(agent.sanitizeConfig());
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error updating agent' });
+    res.status(400).json({ message: 'Error al actualizar el agente', error: error.message });
   }
 };
 
-// Eliminar un agente (soft delete)
+/**
+ * Eliminar un agente
+ */
 exports.deleteAgent = async (req, res) => {
   try {
-    const agent = await Agent.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
-      { isActive: false },
-      { new: true }
-    );
-
+    const agent = await Agent.findOneAndDelete({ _id: req.params.id, user: req.user.id });
+    
     if (!agent) {
-      return res.status(404).json({ message: 'Agent not found' });
+      return res.status(404).json({ message: 'Agente no encontrado' });
     }
 
-    res.json({ message: 'Agent deleted successfully' });
+    res.json({ message: 'Agente eliminado correctamente' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error deleting agent' });
+    res.status(500).json({ message: 'Error al eliminar el agente' });
   }
 };
 
