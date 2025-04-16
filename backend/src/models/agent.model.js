@@ -29,4 +29,10 @@ const agentSchema = new mongoose.Schema({
   }
 });
 
+// Update the updatedAt timestamp before saving
+agentSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
 module.exports = mongoose.model('Agent', agentSchema); 
