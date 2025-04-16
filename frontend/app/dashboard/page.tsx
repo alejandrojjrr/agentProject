@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Bot, Plus, Settings, Zap } from "lucide-react"
+import { Bot, Plus, Settings, Zap, LogOut } from "lucide-react"
 import AgentEditor from "@/components/agent-editor"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     // Check if user is authenticated
@@ -19,6 +21,12 @@ export default function DashboardPage() {
     setIsAuthenticated(!!token)
     setIsLoading(false)
   }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    setIsAuthenticated(false)
+    router.push('/login')
+  }
 
   if (isLoading) {
     return <div className="container mx-auto px-4 py-8">Loading...</div>
@@ -56,9 +64,18 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold">AI Agent Dashboard</h1>
           <p className="text-slate-400">Manage and customize your AI agents</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-500 button-glow">
-          <Plus className="mr-2 h-4 w-4" /> Create New Agent
-        </Button>
+        <div className="flex gap-4">
+          <Button className="bg-blue-600 hover:bg-blue-500 button-glow">
+            <Plus className="mr-2 h-4 w-4" /> Create New Agent
+          </Button>
+          <Button 
+            variant="destructive" 
+            className="button-glow"
+            onClick={handleLogout}
+          >
+            <LogOut className="mr-2 h-4 w-4" /> Logout
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="editor" className="w-full">

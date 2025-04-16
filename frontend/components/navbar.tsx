@@ -30,7 +30,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden items-center space-x-8 md:flex">
+        <div className="hidden space-x-4 md:flex">
           <Link href="/" className="text-zinc-300 hover:text-[#d08c60] transition-all duration-300 relative group">
             Home
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#d08c60] transition-all duration-300 group-hover:w-full"></span>
@@ -46,17 +46,6 @@ export default function Navbar() {
           <Link href="/dashboard" className="text-zinc-300 hover:text-[#d08c60] transition-all duration-300 relative group">
             Dashboard
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#d08c60] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-        </div>
-
-        <div className="hidden space-x-4 md:flex">
-          <Link href="/dashboard">
-            <Button
-              variant="copper"
-              size="lg"
-            >
-              Dashboard
-            </Button>
           </Link>
         </div>
 
