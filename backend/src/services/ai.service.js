@@ -2,13 +2,15 @@ const axios = require('axios');
 
 class AIService {
   constructor(config) {
-    this.type = config.type;
-    this.endpoint = config.endpoint;
+    this.type = config.provider || config.type;
+    this.endpoint = config.endpoint || AIService.getDefaultEndpoint(this.type);
     this.apiKey = config.apiKey;
+    this.model = config.model;
   }
 
   async chat(messages) {
     try {
+      console.log('Chatting with provider:', this.type);
       switch (this.type) {
         case 'openai':
           return await this.chatWithOpenAI(messages);
@@ -17,7 +19,7 @@ class AIService {
         case 'custom':
           return await this.chatWithCustomAPI(messages);
         default:
-          throw new Error('Unsupported AI provider');
+          throw new Error(`Unsupported AI provider: ${this.type}`);
       }
     } catch (error) {
       console.error('AI Service Error:', error);
@@ -27,10 +29,15 @@ class AIService {
 
   async chatWithOpenAI(messages) {
     try {
+      console.log('Sending request to OpenAI:', {
+        endpoint: this.endpoint,
+        model: this.model
+      });
+      
       const response = await axios.post(
         `${this.endpoint}/chat/completions`,
         {
-          model: "gpt-4",
+          model: this.model || "gpt-3.5-turbo",
           messages: messages,
           temperature: 0.7
         },
@@ -47,6 +54,7 @@ class AIService {
         content: response.data.choices[0].message.content
       };
     } catch (error) {
+      console.error('OpenAI API Error:', error.response?.data || error);
       throw new Error(`OpenAI API Error: ${error.response?.data?.error?.message || error.message}`);
     }
   }

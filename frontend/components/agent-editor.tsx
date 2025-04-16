@@ -126,8 +126,22 @@ export default function AgentEditor({ agent, onSaveSuccess }: AgentEditorProps) 
       if (!description.trim()) {
         throw new Error("Description is required")
       }
-      if (!apiConfig.type || !apiConfig.endpoint || !apiConfig.apiKey) {
-        throw new Error("All API configuration fields are required")
+
+      // Set default endpoints for known API types
+      if (apiConfig.type === 'openai') {
+        apiConfig.endpoint = 'https://api.openai.com/v1'
+      } else if (apiConfig.type === 'anthropic') {
+        apiConfig.endpoint = 'https://api.anthropic.com'
+      }
+
+      // Validate required fields
+      if (!apiConfig.type || !apiConfig.apiKey) {
+        throw new Error("API type and API key are required")
+      }
+      
+      // Only validate endpoint for custom API type
+      if (apiConfig.type === 'custom' && !apiConfig.endpoint) {
+        throw new Error("Endpoint is required for custom API")
       }
 
       const token = localStorage.getItem('token')
@@ -139,8 +153,28 @@ export default function AgentEditor({ agent, onSaveSuccess }: AgentEditorProps) 
       const agentData = {
         name: agentName,
         description,
-        apiConfig
+        provider: apiConfig.type,
+        apiConfig: {
+          apiKey: apiConfig.apiKey,
+          model: apiConfig.type === 'openai' ? 'gpt-3.5-turbo' : 
+                 apiConfig.type === 'anthropic' ? 'claude-2' : 
+                 'custom',
+          additionalConfig: new Map(
+            apiConfig.type === 'custom' 
+              ? Object.entries({ endpoint: apiConfig.endpoint })
+              : []
+          )
+        },
+        isActive: true
       }
+
+      console.log('Sending agent data:', JSON.stringify({
+        ...agentData,
+        apiConfig: {
+          ...agentData.apiConfig,
+          additionalConfig: Object.fromEntries(agentData.apiConfig.additionalConfig)
+        }
+      }, null, 2));
 
       const url = agent._id 
         ? `http://localhost:5000/api/agents/${agent._id}` 
@@ -160,6 +194,13 @@ export default function AgentEditor({ agent, onSaveSuccess }: AgentEditorProps) 
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Failed to save agent')
+      }
+
+      const savedAgent = await response.json()
+      
+      // Actualizar el ID del agente si es nuevo
+      if (!agent._id) {
+        agent._id = savedAgent._id
       }
 
       // Si todo fue exitoso

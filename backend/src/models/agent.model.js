@@ -17,24 +17,12 @@ const agentSchema = new mongoose.Schema({
   provider: {
     type: String,
     required: true,
-    enum: ['openai', 'anthropic', 'google', 'custom'],
-    validate: {
-      validator: function(v) {
-        return ['openai', 'anthropic', 'google', 'custom'].includes(v);
-      },
-      message: props => `${props.value} is not a valid provider`
-    }
+    enum: ['openai', 'anthropic', 'google', 'custom']
   },
   apiConfig: {
     apiKey: {
       type: String,
-      required: true,
-      validate: {
-        validator: function(v) {
-          return validateApiKey(this.provider, v);
-        },
-        message: props => `Invalid API key format for provider ${this.provider}`
-      }
+      required: true
     },
     model: {
       type: String,
@@ -46,9 +34,9 @@ const agentSchema = new mongoose.Schema({
             anthropic: ['claude-2', 'claude-instant'],
             google: ['gemini-pro', 'gemini-ultra']
           };
-          return validModels[this.provider]?.includes(v) || this.provider === 'custom';
+          return validModels[this.parent().parent().provider]?.includes(v) || this.parent().parent().provider === 'custom';
         },
-        message: props => `Invalid model for provider ${this.provider}`
+        message: props => `Invalid model for provider ${props.value}`
       }
     },
     additionalConfig: {
@@ -56,6 +44,7 @@ const agentSchema = new mongoose.Schema({
       of: mongoose.Schema.Types.Mixed,
       validate: {
         validator: function(v) {
+          const provider = this.parent().parent().provider;
           const configValidators = {
             openai: (config) => {
               return !config.temperature || (config.temperature >= 0 && config.temperature <= 2);
@@ -67,9 +56,9 @@ const agentSchema = new mongoose.Schema({
               return !config.temperature || (config.temperature >= 0 && config.temperature <= 1);
             }
           };
-          return !configValidators[this.provider] || configValidators[this.provider](v);
+          return !configValidators[provider] || configValidators[provider](v);
         },
-        message: props => `Invalid additional configuration for provider ${this.provider}`
+        message: props => `Invalid additional configuration for provider`
       }
     }
   },
@@ -109,18 +98,24 @@ agentSchema.methods.sanitizeConfig = function() {
 agentSchema.methods.validateConfig = function() {
   const errors = [];
   
+  console.log('Validating config:', JSON.stringify(this.toObject(), null, 2));
+  
   if (!this.apiConfig.apiKey) {
+    console.log('Missing API key');
     errors.push('API key is required');
   }
   
   if (!this.apiConfig.model) {
+    console.log('Missing model');
     errors.push('Model is required');
   }
   
-  if (this.provider === 'custom' && !this.apiConfig.additionalConfig?.endpoint) {
+  if (this.provider === 'custom' && !this.apiConfig.additionalConfig?.get('endpoint')) {
+    console.log('Missing endpoint for custom provider');
     errors.push('Custom provider requires an endpoint');
   }
   
+  console.log('Validation errors:', errors);
   return errors.length === 0 ? null : errors;
 };
 

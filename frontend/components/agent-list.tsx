@@ -72,13 +72,20 @@ export default function AgentList({ onSelectAgent }: { onSelectAgent: (agent: Ag
       const response = await fetch(`http://localhost:5000/api/agents/${agentId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       })
-      if (!response.ok) throw new Error('Failed to delete agent')
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to delete agent')
+      }
+
       setAgents(agents.filter(agent => agent._id !== agentId))
     } catch (error) {
       console.error('Error deleting agent:', error)
+      alert('Error al eliminar el agente: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
