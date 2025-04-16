@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export default function BackgroundStars() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   type Star = {
     x: number;
@@ -17,6 +18,8 @@ export default function BackgroundStars() {
   const stars: Star[] = [];
 
   useEffect(() => {
+    setIsMounted(true);
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -91,7 +94,11 @@ export default function BackgroundStars() {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [isMounted]);
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <canvas

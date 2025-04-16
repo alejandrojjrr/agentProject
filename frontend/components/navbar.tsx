@@ -11,22 +11,10 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-zinc-800/30 bg-[#030303]/90 backdrop-blur-md shadow-lg">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
-        <Link href="/" className="flex items-center space-x-2">
-          <div className="flex items-center">
-            <svg
-              width="40"
-              height="40"
-              viewBox="0 0 100 100"
-              className="text-[rgb(171,89,50)]"
-            >
-              <path
-                fill="currentColor"
-                d="M50 5 L95 95 L50 75 L5 95 Z"
-                className="filter drop-shadow-lg"
-              />
-            </svg>
-            <span className="text-2xl font-bold text-[rgb(171,89,50)] transition-all hover:scale-105 ml-2">Nexus</span>
-          </div>
+        <Link href="/" className="flex items-center">
+          <span className="text-3xl font-bold text-[rgb(171,89,50)] transition-all hover:scale-105 font-serif tracking-wider">
+            NEXUS
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
