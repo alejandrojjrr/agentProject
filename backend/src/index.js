@@ -7,7 +7,8 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 
 // Para depuración - muestra si la variable de entorno se cargó
-console.log('¿MONGODB_URI está definido?', !!process.env.MONGODB_URI);
+console.log('Entorno:', process.env.NODE_ENV);
+console.log('MONGODB_URI definido:', !!process.env.MONGODB_URI);
 
 const app = express();
 
@@ -15,25 +16,42 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Si no se carga desde .env, definimos una URL de conexión por defecto
-// Esta es una solución temporal mientras resuelves el problema con dotenv
-if (!process.env.MONGODB_URI) {
-  process.env.MONGODB_URI = 'mongodb+srv://amilla:mj7l1oVyLOqi1PAf@cluster0.64lbxhq.mongodb.net/?retryWrites=true&w=majority';
-}
-
 // Database connection
-console.log('Intentando conectar a MongoDB con URI:', 
-  process.env.MONGODB_URI.replace(/:[^:]*@/, ':****@'));
+const connectDB = async () => {
+  if (!process.env.MONGODB_URI) {
+    // Si no se carga desde .env, definimos una URL de conexión por defecto
+    // con la contraseña correcta
+    process.env.MONGODB_URI = 'mongodb+srv://amilla:Serpiente@cluster0.64lbxhq.mongodb.net/?retryWrites=true&w=majority';
+    console.log('Usando URI de MongoDB por defecto (no se encontró en .env)');
+  }
 
-mongoose.connect(process.env.MONGODB_URI, {
-  serverSelectionTimeoutMS: 30000, // Timeout de 30 segundos
-  heartbeatFrequencyMS: 2000,     // Latido más frecuente
-})
-.then(() => console.log('Conectado a MongoDB'))
-.catch(err => {
-  console.error('Error de conexión MongoDB:', err);
-  console.log('Asegúrate de que el archivo .env existe y contiene MONGODB_URI correcta');
-});
+  try {
+    // Oculta la contraseña en los logs
+    const uriForLog = process.env.MONGODB_URI.replace(/:[^:]*@/, ':****@');
+    console.log('Intentando conectar a MongoDB:', uriForLog);
+    
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 30000,
+      heartbeatFrequencyMS: 2000,
+    });
+    
+    console.log('Conectado a MongoDB exitosamente');
+  } catch (error) {
+    console.error('Error de conexión a MongoDB:', error.message);
+    
+    if (error.message.includes('bad auth')) {
+      console.error('Error de autenticación: Verifica que el usuario y contraseña sean correctos');
+    } else if (error.name === 'MongoServerSelectionError') {
+      console.error('Error de selección de servidor:', error.reason);
+    }
+    
+    console.error('Asegúrate de que el archivo .env existe y contiene MONGODB_URI correcta');
+    console.error('O verifica que la URI hardcodeada sea correcta');
+  }
+};
+
+// Ejecutar la conexión
+connectDB();
 
 // Handle MongoDB connection events
 mongoose.connection.on('connected', () => {
